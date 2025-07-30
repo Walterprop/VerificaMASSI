@@ -30,8 +30,8 @@ def health_check():
         "status": "healthy",
         "message": "Backend Cybersecurity API is running",
         "api_keys_configured": {
-            "ipqualityscore": os.getenv('IPQUALITYSCORE_API_KEY') is not None,
-            "hibp": os.getenv('HIBP_API_KEY') is not None,
+            "abstractapi": os.getenv('ABSTRACT_API_KEY') is not None,
+            "dehashed": os.getenv('DEHASHED_API_KEY') is not None,
             "anthropic": os.getenv('ANTHROPIC_API_KEY') is not None
         }
     })

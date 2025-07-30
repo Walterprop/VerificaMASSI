@@ -263,8 +263,8 @@
                 if (data.status === 'healthy') {
                     statusDiv.innerHTML = `
                         <h3>✅ API Status: ${data.status.toUpperCase()}</h3>
-                        <p><strong>IPQualityScore:</strong> ${data.api_keys_configured.ipqualityscore ? '✅ OK' : '❌ Non configurata'}</p>
-                        <p><strong>Have I Been Pwned:</strong> ${data.api_keys_configured.hibp ? '✅ OK' : '❌ Non configurata'}</p>
+                        <p><strong>Abstract API:</strong> ${data.api_keys_configured.abstractapi ? '✅ OK' : '❌ Non configurata'}</p>
+                        <p><strong>DeHashed:</strong> ${data.api_keys_configured.dehashed ? '✅ OK' : '❌ Non configurata'}</p>
                         <p><strong>Anthropic Claude:</strong> ${data.api_keys_configured.anthropic ? '✅ OK' : '❌ Non configurata'}</p>
                     `;
                     statusDiv.style.background = '#d4edda';
