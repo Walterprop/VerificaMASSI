@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CyberMatrix Chatbot</title>
+  <title>CyberMatrix Chat</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
   <style>
-    html, body {
+    body, html {
       margin: 0;
       padding: 0;
       height: 100%;
@@ -21,9 +20,9 @@
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 0;
       width: 100%;
       height: 100%;
+      z-index: 0;
     }
 
     .fullscreen-center {
@@ -35,13 +34,6 @@
       text-align: center;
       position: relative;
       z-index: 1;
-    }
-
-    .pill-image {
-      max-width: 600px;
-      width: 100%;
-      height: auto;
-      cursor: pointer;
     }
 
     .chat-card {
@@ -64,6 +56,111 @@
       transform: scale(1.05);
       box-shadow: 0 0 10px #00ff00;
     }
+
+    /* Stili per chat continua */
+    .chat-history {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #00ff00;
+      border-radius: 10px;
+      padding: 15px;
+      background-color: rgba(0, 0, 0, 0.8);
+      margin-bottom: 20px;
+    }
+
+    .chat-message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .user-message {
+      background-color: rgba(0, 100, 0, 0.3);
+      border-left: 3px solid #00ff00;
+      text-align: right;
+    }
+
+    .bot-message {
+      background-color: rgba(0, 0, 100, 0.3);
+      border-left: 3px solid #0080ff;
+    }
+
+    .message-time {
+      font-size: 0.8em;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    /* Stili per pillole clickabili */
+    .pill-image {
+      width: 160px;
+      height: 70px;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+      filter: brightness(0.8);
+      margin: 10px;
+      border-radius: 35px;
+      border: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+      text-align: center;
+      padding: 10px;
+      line-height: 1.2;
+    }
+
+    .pill-image:hover {
+      transform: scale(1.1);
+      filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    }
+
+    .pill-image.red-pill {
+      background: linear-gradient(135deg, #ff4444, #cc0000);
+      color: white;
+    }
+
+    .pill-image.blue-pill {
+      background: linear-gradient(135deg, #4444ff, #0000cc);
+      color: white;
+    }
+
+    .pill-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin: 30px 0;
+    }
+
+    .pill-wrapper {
+      text-align: center;
+      position: relative;
+    }
+
+    .pill-label {
+      color: #ffffff;
+      font-size: 0.9em;
+      margin-top: 8px;
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+    }
+
+    /* Responsive design per schermi piccoli */
+    @media (max-width: 768px) {
+      .pill-image {
+        width: 140px;
+        height: 60px;
+        font-size: 11px;
+        padding: 8px;
+      }
+      
+      .pill-container {
+        gap: 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -73,24 +170,52 @@
   <div id="chat-interface" class="container chat-container text-success fullscreen-center">
     <div class="chat-card text-center">
       <div class="mb-4">
-        <h2 id="chat-title">CyberMatrix Chatbot</h2>
+        <h2 id="chat-title">🤖 CyberMatrix Chatbot</h2>
         <p>Benvenuto! Inserisci una domanda sulla sicurezza informatica o scegli una delle modalità specializzate qui sotto.</p>
       </div>
 
+      <!-- Cronologia chat (visibile solo in modalità chatbot) -->
+      <div id="chat-history" class="chat-history text-start" style="display: block;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">Cronologia Conversazione</small>
+          <button class="btn btn-sm btn-outline-warning" onclick="clearChatHistory()">🗑️ Pulisci</button>
+        </div>
+        <div id="chat-messages">
+          <!-- I messaggi appariranno qui -->
+        </div>
+      </div>
+
       <div class="input-group mb-3">
-        <input type="text" id="inputField" class="form-control bg-dark text-success border-success" placeholder="Scrivi qui...">
+        <input type="text" id="inputField" class="form-control bg-dark text-success border-success" placeholder="Scrivi qui..." onkeypress="handleKeyPress(event)">
         <button class="btn btn-success" onclick="submit()">Invia</button>
       </div>
 
-      <div id="output" class="mt-4 text-start"></div>
+      <!-- Output per risultati non-chat (spam/breach analysis) -->
+      <div id="output" class="mt-4 text-start" style="display: none;"></div>
 
       <div class="mt-5">
-        <h5 class="text-white mb-3">Scegli una modalità:</h5>
-        <div class="d-flex justify-content-center gap-3 flex-wrap">
-          <button class="btn btn-outline-info pill-button" onclick="chooseMode('check')">🔵 Analisi Completa</button>
-          <button class="btn btn-outline-danger pill-button" onclick="chooseMode('spam')">🔴 Solo SPAM</button>
-          <button class="btn btn-outline-warning pill-button" onclick="chooseMode('breach')">🟡 Solo Breach</button>
-          <button class="btn btn-outline-light pill-button" onclick="chooseMode('general')">🤖 Chatbot</button>
+        <h5 class="text-white mb-3">Scegli la tua realtà:</h5>
+        
+        <!-- Citazione Matrix style -->
+        <div class="text-center mb-4">
+          <p class="text-muted" style="font-style: italic; font-size: 0.9em;">
+            "Questa è la tua ultima possibilità. Dopo non potrai più tornare indietro..."
+          </p>
+        </div>
+        
+        <!-- Pillole per le analisi -->
+        <div class="pill-container">
+          <div class="pill-wrapper">
+            <div class="pill-image red-pill" onclick="chooseMode('spam')">CONTROLLO<br>SPAM</div>
+          </div>
+          <div class="pill-wrapper">
+            <div class="pill-image blue-pill" onclick="chooseMode('breach')">CONTROLLO<br>BREACH</div>
+          </div>
+        </div>
+        
+        <!-- Pulsante chatbot separato -->
+        <div class="d-flex justify-content-center mt-4">
+          <button class="btn btn-outline-light pill-button" onclick="chooseMode('general')">CHATBOT</button>
         </div>
       </div>
     </div>
@@ -98,30 +223,158 @@
 
   <script>
     let mode = "general";
+    let chatHistory = []; // Array per memorizzare la cronologia
 
     function chooseMode(selected) {
       mode = selected;
       const title = document.getElementById("chat-title");
+      const chatHistoryDiv = document.getElementById("chat-history");
+      const outputDiv = document.getElementById("output");
+      
+      // Effetto visivo per le pillole
+      if (selected === 'spam' || selected === 'breach') {
+        const pillDivs = document.querySelectorAll('.pill-image');
+        pillDivs.forEach(pill => {
+          pill.style.filter = 'brightness(0.8)';
+        });
+        
+        // Evidenzia la pillola selezionata
+        const selectedPill = document.querySelector(`.pill-image.${selected === 'spam' ? 'red-pill' : 'blue-pill'}`);
+        if (selectedPill) {
+          selectedPill.style.filter = 'brightness(1.3) drop-shadow(0 0 15px rgba(255, 255, 255, 0.8))';
+          selectedPill.style.transform = 'scale(1.2)';
+          // Rimuovi l'effetto dopo 2 secondi
+          setTimeout(() => {
+            selectedPill.style.filter = 'brightness(0.8)';
+            selectedPill.style.transform = 'scale(1)';
+          }, 2000);
+        }
+      }
+      
       if (mode === "spam") {
         title.innerText = "🔴 Analisi SPAM (email singola)";
+        chatHistoryDiv.style.display = "none";
+        outputDiv.style.display = "block";
       } else if (mode === "breach") {
-        title.innerText = "🟡 Verifica Email Compromessa";
-      } else if (mode === "check") {
-        title.innerText = "🔵 Analisi Completa (Spam + Breach)";
+        title.innerText = "🔵 Verifica Email Compromessa";
+        chatHistoryDiv.style.display = "none";
+        outputDiv.style.display = "block";
       } else {
         title.innerText = "🤖 CyberMatrix Chatbot";
+        chatHistoryDiv.style.display = "block";
+        outputDiv.style.display = "none";
+        displayChatHistory();
+      }
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        submit();
+      }
+    }
+
+    function addMessageToHistory(message, isUser) {
+      const timestamp = new Date().toLocaleTimeString();
+      chatHistory.push({
+        message: message,
+        isUser: isUser,
+        timestamp: timestamp
+      });
+    }
+
+    function displayChatHistory() {
+      const chatMessages = document.getElementById("chat-messages");
+      chatMessages.innerHTML = "";
+      
+      chatHistory.forEach(entry => {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `chat-message ${entry.isUser ? 'user-message' : 'bot-message'}`;
+        messageDiv.innerHTML = `
+          <div>${entry.isUser ? '👤 Tu:' : '🤖 CyberMatrix:'} ${entry.message}</div>
+          <div class="message-time">${entry.timestamp}</div>
+        `;
+        chatMessages.appendChild(messageDiv);
+      });
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function clearChatHistory() {
+      if (confirm("Sei sicuro di voler cancellare tutta la cronologia della chat?")) {
+        chatHistory = [];
+        displayChatHistory();
       }
     }
 
     function submit() {
       const input = document.getElementById("inputField").value.trim();
       const output = document.getElementById("output");
-      output.innerText = "⏳ Elaborazione in corso...";
 
       if (!input) {
-        output.innerText = "⚠️ Inserisci un testo valido.";
+        if (mode === "general") {
+          return; // In modalità chat, non mostrare errore per input vuoto
+        } else {
+          output.innerText = "⚠️ Inserisci un testo valido.";
+          return;
+        }
+      }
+
+      // Modalità chatbot - chat continua
+      if (mode === "general") {
+        // Aggiungi messaggio utente alla cronologia
+        addMessageToHistory(input, true);
+        displayChatHistory();
+        
+        // Pulisci input
+        document.getElementById("inputField").value = "";
+        
+        // Aggiungi messaggio temporaneo "typing"
+        const chatMessages = document.getElementById("chat-messages");
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "chat-message bot-message";
+        typingDiv.id = "typing-indicator";
+        typingDiv.innerHTML = "🤖 CyberMatrix: ⏳ Sto pensando...";
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        fetch("/ask_chatbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            message: input,
+            history: chatHistory.slice(-10) // Invia ultimi 10 messaggi per il contesto
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          // Rimuovi indicatore typing
+          const typingIndicator = document.getElementById("typing-indicator");
+          if (typingIndicator) {
+            typingIndicator.remove();
+          }
+          
+          if (data.success) {
+            addMessageToHistory(data.response, false);
+          } else {
+            addMessageToHistory("❌ Errore nella risposta: " + (data.error || "ignoto"), false);
+          }
+          displayChatHistory();
+        })
+        .catch(() => {
+          // Rimuovi indicatore typing
+          const typingIndicator = document.getElementById("typing-indicator");
+          if (typingIndicator) {
+            typingIndicator.remove();
+          }
+          addMessageToHistory("❌ Errore nella richiesta al chatbot.", false);
+          displayChatHistory();
+        });
         return;
       }
+
+      // Modalità non-chat (spam/breach) - mostra elaborazione
+      output.innerText = "⏳ Elaborazione in corso...";
 
       if (mode === "spam") {
         fetch("/check_spam", {
@@ -158,45 +411,10 @@
         })
         .catch(() => output.innerText = "❌ Errore durante il controllo breach.");
 
-      } else if (mode === "check") {
-        fetch("/check_email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: input })
-        })
-        .then(res => res.json())
-        .then(data => {
-          output.innerHTML = `
-            📧 Email: ${input}<br>
-            ✉️ Valida: ${data.spam_check?.valid ? "✅ Sì" : "❌ No"}<br>
-            🚫 Spam: ${data.spam_check?.spam ? "❗ Sospetta" : "✔️ Sicura"}<br>
-            🛡️ Breach: ${
-              data.breach_check?.found
-                ? `<ul>${data.breach_check.breaches.map(b => `<li>${b}</li>`).join("")}</ul>`
-                : "✅ Nessuna violazione rilevata"
-            }
-          `;
-        })
-        .catch(() => output.innerText = "❌ Errore durante l'analisi completa.");
-
-      } else {
-        fetch("/ask_chatbot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: input })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            output.innerText = "🤖 " + data.response;
-          } else {
-            output.innerText = "❌ Errore nella risposta: " + (data.error || "ignoto");
-          }
-        })
-        .catch(() => {
-          output.innerText = "❌ Errore nella richiesta al chatbot.";
-        });
       }
+      
+      // Pulisci input dopo l'invio per modalità non-chat
+      document.getElementById("inputField").value = "";
     }
 
     // sfondo Matrix
@@ -228,7 +446,12 @@
       }
     }
 
-    setInterval(drawMatrix, 33);
+    setInterval(drawMatrix, 35);
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
   </script>
 </body>
 </html>

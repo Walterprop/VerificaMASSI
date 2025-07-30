@@ -671,12 +671,13 @@ Frequenza: dati critici giornalmente, altri settimanalmente"""
             }
         }
     
-    def get_chatbot_response(self, question: str) -> str:
+    def get_chatbot_response(self, question: str, history: list = None) -> str:
         """
-        Risponde a domande di cybersecurity
+        Risponde a domande di cybersecurity con supporto cronologia
         
         Args:
             question (str): Domanda dell'utente
+            history (list): Cronologia delle conversazioni precedenti
             
         Returns:
             str: Risposta del chatbot
@@ -692,7 +693,7 @@ Frequenza: dati critici giornalmente, altri settimanalmente"""
             
             # Se non trova corrispondenze, prova con Claude API (se configurata)
             if ANTHROPIC_API_KEY != 'YOUR_ANTHROPIC_API_KEY':
-                claude_response = self._ask_claude(question)
+                claude_response = self._ask_claude(question, history)
                 if claude_response:
                     return claude_response
             
@@ -713,8 +714,8 @@ Prova a riformulare la domanda usando una di queste parole chiave!"""
             logger.error(f"Errore nel chatbot: {e}")
             return "Scusa, si è verificato un errore. Riprova più tardi."
     
-    def _ask_claude(self, question: str) -> Optional[str]:
-        """Integrazione opzionale con Claude API"""
+    def _ask_claude(self, question: str, history: list = None) -> Optional[str]:
+        """Integrazione opzionale con Claude API con supporto cronologia"""
         try:
             headers = {
                 'Content-Type': 'application/json',
@@ -722,15 +723,35 @@ Prova a riformulare la domanda usando una di queste parole chiave!"""
                 'anthropic-version': '2023-06-01'
             }
             
+            # Costruisci il contesto della conversazione
+            messages = []
+            
+            # Aggiungi cronologia se presente
+            if history:
+                for entry in history[-10:]:  # Ultimi 10 messaggi per limitare il token usage
+                    if entry.get('isUser'):
+                        messages.append({
+                            'role': 'user',
+                            'content': entry.get('message', '')
+                        })
+                    else:
+                        messages.append({
+                            'role': 'assistant', 
+                            'content': entry.get('message', '')
+                        })
+            
+            # Aggiungi domanda corrente
+            messages.append({
+                'role': 'user',
+                'content': f"""Sei un esperto di cybersecurity. Rispondi in italiano alla seguente domanda sulla sicurezza informatica: {question}
+                
+                Fornisci una risposta pratica e utile, massimo 300 parole. Se c'è una conversazione precedente, considera il contesto."""
+            })
+            
             data = {
                 'model': 'claude-3-haiku-20240307',
                 'max_tokens': 500,
-                'messages': [{
-                    'role': 'user',
-                    'content': f"""Sei un esperto di cybersecurity. Rispondi in italiano alla seguente domanda sulla sicurezza informatica: {question}
-                    
-                    Fornisci una risposta pratica e utile, massimo 300 parole."""
-                }]
+                'messages': messages
             }
             
             logger.info(f"Chiamando Claude API per: {question[:50]}...")
@@ -767,13 +788,9 @@ def check_breach_status(email: str) -> Dict:
     """Funzione wrapper per controllo breach"""
     return email_validator.check_breach_status(email)
 
-def analyze_email(email: str) -> Dict:
-    """Funzione wrapper per analisi completa email"""
-    return email_validator.analyze_email(email)
-
-def get_chatbot_response(question: str) -> str:
-    """Funzione wrapper per chatbot"""
-    return chatbot.get_chatbot_response(question)
+def get_chatbot_response(question: str, history: list = None) -> str:
+    """Funzione wrapper per chatbot con supporto cronologia"""
+    return chatbot.get_chatbot_response(question, history)
 
 # Esempio di integrazione Flask
 if __name__ == "__main__":
@@ -797,9 +814,10 @@ if __name__ == "__main__":
     # Test email analysis (richiede API keys valide)
     print("2. Test Analisi Email:")
     print("NOTA: Per testare le funzioni di analisi email, configura le API keys:")
-    print("- IPQUALITYSCORE_API_KEY")
-    print("- HIBP_API_KEY")
+    print("- ABSTRACT_API_KEY")
+    print("- DEHASHED_API_KEY")
     print("- ANTHROPIC_API_KEY (opzionale)")
     print("\nEsempio di uso:")
-    print(f"result = analyze_email('{test_email}')")
+    print(f"result = check_spam_validity('{test_email}')")
+    print(f"result = check_breach_status('{test_email}')")
     print("print(json.dumps(result, indent=2))")
