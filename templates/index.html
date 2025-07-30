@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Cybersecurity - Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        input[type="text"], input[type="email"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status {
+            background: #e3f2fd;
+            border: 2px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 30px;
+            color: #1565c0;
+        }
+        
+        .status h3 {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Backend Cybersecurity</h1>
+            <p>Test Interface per API di Sicurezza Email e Chatbot</p>
+        </div>
+        
+        <div class="status" id="apiStatus">
+            <h3>📡 Status API</h3>
+            <p>Verificando connessione...</p>
+        </div>
+        
+        <div class="content">
+            <!-- Sezione Chatbot -->
+            <div class="section">
+                <h2>🤖 Chatbot Cybersecurity</h2>
+                <div class="form-group">
+                    <label for="chatQuestion">Fai una domanda sulla cybersecurity:</label>
+                    <textarea id="chatQuestion" placeholder="Es: Cos'è il phishing? Come creare password sicure?"></textarea>
+                </div>
+                <button class="btn" onclick="askChatbot()">Chiedi al Chatbot</button>
+                
+                <div class="loading" id="chatLoading">
+                    <span class="spinner"></span>Elaborando risposta...
+                </div>
+                <div class="result" id="chatResult"></div>
+            </div>
+            
+            <!-- Sezione Analisi Email -->
+            <div class="section">
+                <h2>📧 Analisi Email</h2>
+                <div class="form-group">
+                    <label for="emailInput">Inserisci email da analizzare:</label>
+                    <input type="email" id="emailInput" placeholder="esempio@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo di analisi:</label>
+                    <select id="analysisType" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+                        <option value="complete">Analisi Completa (Spam + Breach)</option>
+                        <option value="spam">Solo Controllo Spam</option>
+                        <option value="breach">Solo Controllo Breach</option>
+                    </select>
+                </div>
+                
+                <button class="btn" onclick="analyzeEmail()">Analizza Email</button>
+                
+                <div class="loading" id="emailLoading">
+                    <span class="spinner"></span>Analizzando email...
+                </div>
+                <div class="result" id="emailResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Controlla status API all'avvio
+        window.onload = function() {
+            checkApiStatus();
+        };
+        
+        async function checkApiStatus() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('apiStatus');
+                if (data.status === 'healthy') {
+                    statusDiv.innerHTML = `
+                        <h3>✅ API Status: ${data.status.toUpperCase()}</h3>
+                        <p><strong>IPQualityScore:</strong> ${data.api_keys_configured.ipqualityscore ? '✅ OK' : '❌ Non configurata'}</p>
+                        <p><strong>Have I Been Pwned:</strong> ${data.api_keys_configured.hibp ? '✅ OK' : '❌ Non configurata'}</p>
+                        <p><strong>Anthropic Claude:</strong> ${data.api_keys_configured.anthropic ? '✅ OK' : '❌ Non configurata'}</p>
+                    `;
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.borderColor = '#c3e6cb';
+                    statusDiv.style.color = '#155724';
+                } else {
+                    throw new Error('API non disponibile');
+                }
+            } catch (error) {
+                const statusDiv = document.getElementById('apiStatus');
+                statusDiv.innerHTML = `
+                    <h3>❌ Errore Connessione</h3>
+                    <p>Impossibile connettersi al backend. Assicurati che l'app Flask sia in esecuzione.</p>
+                `;
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.borderColor = '#f5c6cb';
+                statusDiv.style.color = '#721c24';
+            }
+        }
+        
+        async function askChatbot() {
+            const question = document.getElementById('chatQuestion').value.trim();
+            const loadingDiv = document.getElementById('chatLoading');
+            const resultDiv = document.getElementById('chatResult');
+            
+            if (!question) {
+                alert('Inserisci una domanda!');
+                return;
+            }
+            
+            // Mostra loading
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/ask_chatbot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: question })
+                });
+                
+                const data = await response.json();
+                
+                // Nascondi loading
+                loadingDiv.style.display = 'none';
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `🤖 Risposta:\n\n${data.response}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Errore: ${data.error}`;
+                }
+                
+                resultDiv.style.display = 'block';
+                
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Errore di connessione: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        async function analyzeEmail() {
+            const email = document.getElementById('emailInput').value.trim();
+            const analysisType = document.getElementById('analysisType').value;
+            const loadingDiv = document.getElementById('emailLoading');
+            const resultDiv = document.getElementById('emailResult');
+            
+            if (!email) {
+                alert('Inserisci un indirizzo email!');
+                return;
+            }
+            
+            // Validazione email base
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Inserisci un indirizzo email valido!');
+                return;
+            }
+            
+            // Determina endpoint
+            let endpoint;
+            switch (analysisType) {
+                case 'complete':
+                    endpoint = '/check_email';
+                    break;
+                case 'spam':
+                    endpoint = '/check_spam';
+                    break;
+                case 'breach':
+                    endpoint = '/check_breach';
+                    break;
+            }
+            
+            // Mostra loading
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                
+                // Nascondi loading
+                loadingDiv.style.display = 'none';
+                
+                // Formatta risultati
+                let formattedResult = '';
+                
+                if (analysisType === 'complete') {
+                    formattedResult = formatCompleteAnalysis(data);
+                } else if (analysisType === 'spam') {
+                    formattedResult = formatSpamAnalysis(data);
+                } else if (analysisType === 'breach') {
+                    formattedResult = formatBreachAnalysis(data);
+                }
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = formattedResult;
+                resultDiv.style.display = 'block';
+                
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Errore di connessione: ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        function formatCompleteAnalysis(data) {
+            let result = `📧 ANALISI COMPLETA: ${data.email}\n`;
+            result += `🕐 Timestamp: ${data.timestamp}\n\n`;
+            
+            // Spam Analysis
+            result += `🚨 CONTROLLO SPAM:\n`;
+            if (data.spam_analysis.success) {
+                result += `  ✅ Successo: ${data.spam_analysis.valid ? 'Email valida' : 'Email non valida'}\n`;
+                result += `  📊 Fraud Score: ${data.spam_analysis.fraud_score}/100\n`;
+                result += `  🎯 Risk Level: ${data.spam_analysis.risk_assessment}\n`;
+                result += `  📦 Disposable: ${data.spam_analysis.disposable ? 'Sì' : 'No'}\n`;
+            } else {
+                result += `  ❌ Errore: ${data.spam_analysis.error}\n`;
+            }
+            
+            result += `\n🔍 CONTROLLO BREACH:\n`;
+            if (data.breach_analysis.success) {
+                result += `  ${data.breach_analysis.breached ? '⚠️' : '✅'} Breached: ${data.breach_analysis.breached ? 'Sì' : 'No'}\n`;
+                result += `  📈 Breach Count: ${data.breach_analysis.breach_count}\n`;
+                if (data.breach_analysis.breaches && data.breach_analysis.breaches.length > 0) {
+                    result += `  📋 Breach trovati:\n`;
+                    data.breach_analysis.breaches.forEach(breach => {
+                        result += `    • ${breach.name} (${breach.breach_date})\n`;
+                    });
+                }
+            } else {
+                result += `  ❌ Errore: ${data.breach_analysis.error}\n`;
+            }
+            
+            result += `\n🎯 VALUTAZIONE COMPLESSIVA:\n`;
+            result += `  📊 Risk Score: ${data.overall_assessment.risk_score}/100\n`;
+            result += `  🚨 Risk Level: ${data.overall_assessment.risk_level}\n`;
+            result += `  📝 Summary: ${data.overall_assessment.summary}\n`;
+            
+            if (data.overall_assessment.recommendations.length > 0) {
+                result += `\n💡 RACCOMANDAZIONI:\n`;
+                data.overall_assessment.recommendations.forEach(rec => {
+                    result += `  • ${rec}\n`;
+                });
+            }
+            
+            return result;
+        }
+        
+        function formatSpamAnalysis(data) {
+            let result = `🚨 CONTROLLO SPAM: ${data.email}\n\n`;
+            
+            if (data.success) {
+                result += `✅ Status: ${data.valid ? 'Email valida' : 'Email non valida'}\n`;
+                result += `📊 Fraud Score: ${data.fraud_score}/100\n`;
+                result += `🎯 Risk Assessment: ${data.risk_assessment}\n`;
+                result += `📦 Disposable: ${data.disposable ? 'Sì' : 'No'}\n`;
+                result += `🕐 DNS Valid: ${data.dns_valid ? 'Sì' : 'No'}\n`;
+                result += `⚠️ Suspect: ${data.suspect ? 'Sì' : 'No'}\n`;
+            } else {
+                result += `❌ Errore: ${data.error}\n`;
+            }
+            
+            return result;
+        }
+        
+        function formatBreachAnalysis(data) {
+            let result = `🔍 CONTROLLO BREACH: ${data.email}\n\n`;
+            
+            if (data.success) {
+                result += `${data.breached ? '⚠️' : '✅'} Breached: ${data.breached ? 'Sì' : 'No'}\n`;
+                result += `📈 Breach Count: ${data.breach_count}\n`;
+                result += `🎯 Risk Level: ${data.risk_level}\n`;
+                
+                if (data.breaches && data.breaches.length > 0) {
+                    result += `\n📋 Breach Details:\n`;
+                    data.breaches.forEach(breach => {
+                        result += `\n• ${breach.name}\n`;
+                        result += `  📅 Date: ${breach.breach_date}\n`;
+                        result += `  👥 Accounts: ${breach.pwn_count.toLocaleString()}\n`;
+                        result += `  ✅ Verified: ${breach.is_verified ? 'Sì' : 'No'}\n`;
+                    });
+                }
+                
+                if (data.recommendations && data.recommendations.length > 0) {
+                    result += `\n💡 Raccomandazioni:\n`;
+                    data.recommendations.forEach(rec => {
+                        result += `• ${rec}\n`;
+                    });
+                }
+            } else {
+                result += `❌ Errore: ${data.error}\n`;
+            }
+            
+            return result;
+        }
+        
+        // Gestione Enter per inviare
+        document.getElementById('chatQuestion').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                askChatbot();
+            }
+        });
+        
+        document.getElementById('emailInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeEmail();
+            }
+        });
+    </script>
+</body>
+</html>
