@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberMatrix Chatbot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: black;
+      color: #00ff00;
+      font-family: monospace;
+      overflow: hidden;
+    }
+
+    #matrix-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .fullscreen-center {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pill-image {
+      max-width: 600px;
+      width: 100%;
+      height: auto;
+      cursor: pointer;
+    }
+
+    .chat-card {
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    .pill-button {
+      border-radius: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .pill-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px #00ff00;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix-canvas"></canvas>
+
+  <!-- Interfaccia chatbot sempre visibile -->
+  <div id="chat-interface" class="container chat-container text-success fullscreen-center">
+    <div class="chat-card text-center">
+      <div class="mb-4">
+        <h2 id="chat-title">CyberMatrix Chatbot</h2>
+        <p>Benvenuto! Inserisci una domanda sulla sicurezza informatica o scegli una delle modalità specializzate qui sotto.</p>
+      </div>
+
+      <div class="input-group mb-3">
+        <input type="text" id="inputField" class="form-control bg-dark text-success border-success" placeholder="Scrivi qui...">
+        <button class="btn btn-success" onclick="submit()">Invia</button>
+      </div>
+
+      <div id="output" class="mt-4 text-start"></div>
+
+      <div class="mt-5">
+        <h5 class="text-white mb-3">Scegli una modalità:</h5>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <button class="btn btn-outline-info pill-button" onclick="chooseMode('check')">🔵 Analisi Completa</button>
+          <button class="btn btn-outline-danger pill-button" onclick="chooseMode('spam')">🔴 Solo SPAM</button>
+          <button class="btn btn-outline-warning pill-button" onclick="chooseMode('breach')">🟡 Solo Breach</button>
+          <button class="btn btn-outline-light pill-button" onclick="chooseMode('general')">🤖 Chatbot</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mode = "general";
+
+    function chooseMode(selected) {
+      mode = selected;
+      const title = document.getElementById("chat-title");
+      if (mode === "spam") {
+        title.innerText = "🔴 Analisi SPAM (email singola)";
+      } else if (mode === "breach") {
+        title.innerText = "🟡 Verifica Email Compromessa";
+      } else if (mode === "check") {
+        title.innerText = "🔵 Analisi Completa (Spam + Breach)";
+      } else {
+        title.innerText = "🤖 CyberMatrix Chatbot";
+      }
+    }
+
+    function submit() {
+      const input = document.getElementById("inputField").value.trim();
+      const output = document.getElementById("output");
+      output.innerText = "⏳ Elaborazione in corso...";
+
+      if (!input) {
+        output.innerText = "⚠️ Inserisci un testo valido.";
+        return;
+      }
+
+      if (mode === "spam") {
+        fetch("/check_spam", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: input })
+        })
+        .then(res => res.json())
+        .then(data => {
+          output.innerHTML = `
+            📧 Email: ${input}<br>
+            ✉️ Valida: ${data.valid ? "✅ Sì" : "❌ No"}<br>
+            🚫 Spam: ${data.spam ? "❗ Sospetta" : "✔️ Sicura"}`;
+        })
+        .catch(() => output.innerText = "❌ Errore durante il controllo spam.");
+
+      } else if (mode === "breach") {
+        fetch("/check_breach", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: input })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.found === false) {
+            output.innerText = `🛡️ Nessuna violazione rilevata per ${input}`;
+          } else {
+            output.innerHTML = `
+              🛑 Email compromessa!<br>
+              🔍 Servizi violati:<br>
+              <ul>${data.breaches.map(b => `<li>${b}</li>`).join("")}</ul>
+            `;
+          }
+        })
+        .catch(() => output.innerText = "❌ Errore durante il controllo breach.");
+
+      } else if (mode === "check") {
+        fetch("/check_email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: input })
+        })
+        .then(res => res.json())
+        .then(data => {
+          output.innerHTML = `
+            📧 Email: ${input}<br>
+            ✉️ Valida: ${data.spam_check?.valid ? "✅ Sì" : "❌ No"}<br>
+            🚫 Spam: ${data.spam_check?.spam ? "❗ Sospetta" : "✔️ Sicura"}<br>
+            🛡️ Breach: ${
+              data.breach_check?.found
+                ? `<ul>${data.breach_check.breaches.map(b => `<li>${b}</li>`).join("")}</ul>`
+                : "✅ Nessuna violazione rilevata"
+            }
+          `;
+        })
+        .catch(() => output.innerText = "❌ Errore durante l'analisi completa.");
+
+      } else {
+        fetch("/ask_chatbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: input })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            output.innerText = "🤖 " + data.response;
+          } else {
+            output.innerText = "❌ Errore nella risposta: " + (data.error || "ignoto");
+          }
+        })
+        .catch(() => {
+          output.innerText = "❌ Errore nella richiesta al chatbot.";
+        });
+      }
+    }
+
+    // sfondo Matrix
+    const canvas = document.getElementById("matrix-canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const matrix = "01";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#00FF00";
+      ctx.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = matrix.charAt(Math.floor(Math.random() * matrix.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+          drops[i] = 0;
+
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 33);
+  </script>
+</body>
+</html>
