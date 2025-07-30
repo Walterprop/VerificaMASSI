@@ -1,0 +1,32 @@
+# Configurazione API Keys - NON COMMITARE!
+.env
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test Files
+test_*.py
+*_test.py
+demo_*.py
+debug_*.py
